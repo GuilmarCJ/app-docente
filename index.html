@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>App Web Docente</title>
+  <link rel="stylesheet" href="style.css" />
+  <script defer src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/9.6.1/firebase-auth.js"></script>
+  <script defer src="https://www.gstatic.com/firebasejs/9.6.1/firebase-firestore.js"></script>
+  <script defer src="firebase-config.js"></script>
+  <script defer src="script.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h2>Registro de Docente</h2>
+    <form id="registerForm">
+      <input type="email" id="email" placeholder="Correo" required />
+      <input type="password" id="password" placeholder="Contraseña" required />
+      <button type="submit">Registrar</button>
+    </form>
+
+    <h2>Login</h2>
+    <form id="loginForm">
+      <input type="email" id="loginEmail" placeholder="Correo" required />
+      <input type="password" id="loginPassword" placeholder="Contraseña" required />
+      <button type="submit">Iniciar Sesión</button>
+    </form>
+
+    <div id="dashboard" style="display:none;">
+      <h2>Crear Salón</h2>
+      <form id="classForm">
+        <select id="grado" required>
+          <option value="">Seleccione grado</option>
+          <option value="1° Primaria">1° Primaria</option>
+          <option value="2° Primaria">2° Primaria</option>
+          <option value="3° Primaria">3° Primaria</option>
+          <option value="4° Primaria">4° Primaria</option>
+          <option value="5° Primaria">5° Primaria</option>
+          <option value="6° Primaria">6° Primaria</option>
+        </select>
+        <input type="number" id="cantidad" placeholder="Cantidad de alumnos" min="1" required />
+        <button type="submit">Crear salón</button>
+      </form>
+    </div>
+
+    <div id="alumnosForm" style="display:none;">
+      <h2>Agregar Alumno <span id="alumnoActual">1</span> de <span id="alumnoCantidad">1</span></h2>
+      <form id="alumnoForm">
+        <input type="text" id="usuarioAlumno" placeholder="Usuario" required />
+        <input type="text" id="claveAlumno" placeholder="Contraseña" required />
+        <button type="submit">Agregar alumno</button>
+      </form>
+    </div>
+
+    <div id="salonFinal" style="display:none;">
+      <h2>Salón creado para <span id="gradoFinal"></span></h2>
+      <ul id="listaAlumnos"></ul>
+    </div>
+  </div>
+</body>
+</html>
