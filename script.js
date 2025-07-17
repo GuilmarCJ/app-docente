@@ -1,5 +1,20 @@
 // script.js
 
+// Configuración de Firebase incluida directamente
+const firebaseConfig = {
+  apiKey: "AIzaSyA3zknvFkQ5Oids3t5DP5RkGPZVpac2TpI",
+  authDomain: "lecturaprimaria-4490c.firebaseapp.com",
+  projectId: "lecturaprimaria-4490c",
+  storageBucket: "lecturaprimaria-4490c.firebasestorage.app",
+  messagingSenderId: "516056173373",
+  appId: "1:516056173373:web:b33564eab44e4325f41354"
+};
+
+// Inicializa Firebase
+firebase.initializeApp(firebaseConfig);
+const auth = firebase.auth();
+const db = firebase.firestore();
+
 // 1. Registro de docentes
 document.getElementById("registerForm").addEventListener("submit", async (e) => {
   e.preventDefault();
