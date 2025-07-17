@@ -42,19 +42,24 @@
     </section>
 
     <!-- Dashboard Principal (oculto inicialmente) -->
-    <section id="dashboard" class="hidden">
-      <div class="flex justify-between items-center mb-6">
-        <h2 class="text-xl font-semibold text-gray-700">Mis Clases</h2>
-        <button id="createClassBtn" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">
-          Crear Nueva Clase
-        </button>
-      </div>
-      
-      <!-- Lista de clases existentes -->
-      <div id="classList" class="space-y-4">
-        <!-- Las clases se cargarán dinámicamente aquí -->
-      </div>
-    </section>
+<section id="dashboard" class="hidden">
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="text-xl font-semibold text-gray-700">Mis Clases</h2>
+    <div class="flex items-center space-x-4">
+      <button id="createClassBtn" class="bg-indigo-600 text-white px-4 py-2 rounded hover:bg-indigo-700">
+        Crear Nueva Clase
+      </button>
+      <button id="logoutBtn" class="text-red-600 hover:text-red-800 text-sm font-medium">
+        Cerrar Sesión
+      </button>
+    </div>
+  </div>
+  
+  <!-- Lista de clases existentes -->
+  <div id="classList" class="space-y-4">
+    <!-- Las clases se cargarán dinámicamente aquí -->
+  </div>
+</section>
 
     <!-- Formulario para crear clase (oculto inicialmente) -->
     <section id="createClassSection" class="hidden">
