@@ -98,9 +98,14 @@
     <section id="classView" class="hidden">
       <div class="flex justify-between items-center mb-4">
         <h2 class="text-xl font-semibold text-gray-700">Clase: <span id="classGrade"></span></h2>
-        <button id="backToDashboard" class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">
-          Volver al Dashboard
-        </button>
+        <div class="flex space-x-2">
+          <button id="backToDashboard" class="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400">
+            Volver al Dashboard
+          </button>
+          <button id="logoutBtnFromClass" class="text-red-600 hover:text-red-800 text-sm font-medium self-center">
+            Cerrar Sesión
+          </button>
+        </div>
       </div>
       
       <div class="bg-gray-50 p-4 rounded-lg">
