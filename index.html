@@ -3,60 +3,69 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>App Web Docente</title>
-
-  <!-- Tailwind CSS CDN -->
+  <title>Plataforma Docente</title>
   <script src="https://cdn.tailwindcss.com"></script>
-
-  <!-- Firebase -->
   <script defer src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script defer src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-  
-  <!-- App JS -->
   <script defer src="script.js"></script>
 </head>
 
-<body class="bg-gradient-to-r from-sky-100 to-blue-200 min-h-screen flex items-center justify-center">
-  <main class="w-full max-w-md bg-white shadow-xl rounded-xl p-8 space-y-8">
+<body class="bg-gradient-to-br from-sky-100 to-blue-200 min-h-screen flex items-center justify-center">
+  <main class="bg-white w-full max-w-md p-6 rounded-lg shadow-md space-y-6">
+
     <h1 class="text-2xl font-bold text-center text-blue-800">Plataforma Docente</h1>
 
-    <!-- Registro -->
-    <section>
-      <h2 class="text-xl font-semibold text-gray-700 mb-4">Registro de Docente</h2>
-      <form id="registerForm" class="space-y-4">
-        <input type="email" id="email" placeholder="Correo" required class="w-full p-2 border rounded" />
-        <input type="password" id="password" placeholder="Contraseña" required class="w-full p-2 border rounded" />
-        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Registrar</button>
-      </form>
-    </section>
-
     <!-- Login -->
-    <section>
-      <h2 class="text-xl font-semibold text-gray-700 mb-4">Iniciar Sesión</h2>
+    <section id="loginSection">
       <form id="loginForm" class="space-y-4">
         <input type="email" id="loginEmail" placeholder="Correo" required class="w-full p-2 border rounded" />
         <input type="password" id="loginPassword" placeholder="Contraseña" required class="w-full p-2 border rounded" />
-        <button type="submit" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">Ingresar</button>
+        <button type="submit" class="w-full bg-green-600 text-white py-2 rounded hover:bg-green-700">Iniciar Sesión</button>
       </form>
+      <p class="text-center mt-4">
+        ¿No tienes cuenta? 
+        <a href="#" id="showRegister" class="text-blue-600 hover:underline">Regístrate</a>
+      </p>
+    </section>
+
+    <!-- Registro -->
+    <section id="registerSection" class="hidden">
+      <form id="registerForm" class="space-y-4">
+        <input type="email" id="registerEmail" placeholder="Correo" required class="w-full p-2 border rounded" />
+        <input type="password" id="registerPassword" placeholder="Contraseña" required class="w-full p-2 border rounded" />
+        <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700">Registrarse</button>
+      </form>
+      <p class="text-center mt-4">
+        ¿Ya tienes cuenta?
+        <a href="#" id="showLogin" class="text-blue-600 hover:underline">Inicia sesión</a>
+      </p>
     </section>
 
     <!-- Dashboard -->
-    <section id="dashboard" class="hidden">
-      <h2 class="text-xl font-semibold text-gray-700 mb-4">Crear Salón</h2>
-      <form id="classForm" class="space-y-4">
-        <select id="grado" required class="w-full p-2 border rounded">
-          <option value="">Seleccione grado</option>
-          <option>1° Primaria</option>
-          <option>2° Primaria</option>
-          <option>3° Primaria</option>
-          <option>4° Primaria</option>
-          <option>5° Primaria</option>
-          <option>6° Primaria</option>
-        </select>
-        <input type="number" id="cantidad" placeholder="Cantidad de alumnos" min="1" required class="w-full p-2 border rounded" />
-        <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700">Crear Salón</button>
-      </form>
+    <section id="dashboard" class="hidden space-y-6">
+      <div id="salonExistente" class="hidden">
+        <h2 class="text-xl font-semibold text-gray-800">Tu Salón</h2>
+        <p><strong>Grado:</strong> <span id="gradoFinal"></span></p>
+        <ul id="listaAlumnos" class="list-disc pl-5 space-y-1 text-gray-700"></ul>
+      </div>
+
+      <div>
+        <h2 class="text-xl font-semibold text-gray-800">Crear nuevo salón</h2>
+        <form id="classForm" class="space-y-4">
+          <select id="grado" required class="w-full p-2 border rounded">
+            <option value="">Seleccione grado</option>
+            <option>1° Primaria</option>
+            <option>2° Primaria</option>
+            <option>3° Primaria</option>
+            <option>4° Primaria</option>
+            <option>5° Primaria</option>
+            <option>6° Primaria</option>
+          </select>
+          <input type="number" id="cantidad" placeholder="Cantidad de alumnos" min="1" required class="w-full p-2 border rounded" />
+          <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded hover:bg-indigo-700">Crear salón</button>
+        </form>
+      </div>
     </section>
 
     <!-- Formulario Alumnos -->
@@ -69,14 +78,6 @@
         <input type="text" id="claveAlumno" placeholder="Contraseña" required class="w-full p-2 border rounded" />
         <button type="submit" class="w-full bg-yellow-500 text-white py-2 rounded hover:bg-yellow-600">Agregar Alumno</button>
       </form>
-    </section>
-
-    <!-- Resultado final -->
-    <section id="salonFinal" class="hidden">
-      <h2 class="text-xl font-semibold text-gray-700 mb-2">
-        Salón creado para <span id="gradoFinal" class="font-bold"></span>
-      </h2>
-      <ul id="listaAlumnos" class="list-disc pl-5 text-gray-700 space-y-1"></ul>
     </section>
   </main>
 </body>
