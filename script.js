@@ -231,3 +231,29 @@ auth.onAuthStateChanged(user => {
     showSection(loginSection);
   }
 });
+
+// 11. Cerrar sesión
+document.getElementById("logoutBtn").addEventListener("click", async () => {
+  try {
+    await auth.signOut();
+    // Limpiar formularios al cerrar sesión
+    document.getElementById("loginForm").reset();
+    document.getElementById("registerForm").reset();
+    showSection(loginSection);
+  } catch (error) {
+    alert(`Error al cerrar sesión: ${error.message}`);
+  }
+});
+
+// Cerrar sesión desde la vista de clase
+document.getElementById("logoutBtnFromClass").addEventListener("click", async () => {
+  try {
+    await auth.signOut();
+    // Limpiar formularios al cerrar sesión
+    document.getElementById("loginForm").reset();
+    document.getElementById("registerForm").reset();
+    showSection(loginSection);
+  } catch (error) {
+    alert(`Error al cerrar sesión: ${error.message}`);
+  }
+});
