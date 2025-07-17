@@ -8,6 +8,9 @@ const firebaseConfig = {
   appId: "1:516056173373:web:b33564eab44e4325f41354"
 };
 
+// Constantes
+const MAX_ALUMNOS = 40; // Límite máximo de alumnos por clase
+
 // Inicializa Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
@@ -22,12 +25,50 @@ const alumnosFormSection = document.getElementById("alumnosForm");
 const classViewSection = document.getElementById("classView");
 const classList = document.getElementById("classList");
 
+// Variables de estado
+let currentClassId = null;
+
 // Mostrar/ocultar secciones
 function showSection(section) {
   document.querySelectorAll("main > section").forEach(sec => {
     sec.classList.add("hidden");
   });
   section.classList.remove("hidden");
+}
+
+// Mostrar alerta de éxito
+function showSuccessAlert(message) {
+  Swal.fire({
+    icon: 'success',
+    title: 'Éxito',
+    text: message,
+    confirmButtonColor: '#3085d6',
+  });
+}
+
+// Mostrar alerta de error
+function showErrorAlert(message) {
+  Swal.fire({
+    icon: 'error',
+    title: 'Error',
+    text: message,
+    confirmButtonColor: '#d33',
+  });
+}
+
+// Mostrar confirmación
+async function showConfirmation(message) {
+  const result = await Swal.fire({
+    title: '¿Estás seguro?',
+    text: message,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#d33',
+    confirmButtonText: 'Sí, continuar',
+    cancelButtonText: 'Cancelar'
+  });
+  return result.isConfirmed;
 }
 
 // 1. Manejo del login/registro
@@ -47,10 +88,10 @@ document.getElementById("registerForm").addEventListener("submit", async (e) => 
   
   try {
     await auth.createUserWithEmailAndPassword(email, password);
-    alert("Cuenta creada con éxito. Por favor inicia sesión.");
+    showSuccessAlert("Cuenta creada con éxito. Por favor inicia sesión.");
     showSection(loginSection);
   } catch (error) {
-    alert(`Error al registrar: ${error.message}`);
+    showErrorAlert(`Error al registrar: ${error.message}`);
   }
 });
 
@@ -64,7 +105,7 @@ document.getElementById("loginForm").addEventListener("submit", async (e) => {
     await auth.signInWithEmailAndPassword(email, password);
     checkUserClasses();
   } catch (error) {
-    alert(`Error al iniciar sesión: ${error.message}`);
+    showErrorAlert(`Error al iniciar sesión: ${error.message}`);
   }
 });
 
@@ -109,7 +150,7 @@ async function loadUserClasses() {
     classCard.className = "bg-gray-50 p-4 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100";
     classCard.innerHTML = `
       <h3 class="font-medium text-gray-700">${data.grado}</h3>
-      <p class="text-sm text-gray-500">${data.alumnos.length} alumnos</p>
+      <p class="text-sm text-gray-500">${data.alumnos.length}/${data.cantidad} alumnos</p>
     `;
     classCard.addEventListener("click", () => viewClass(doc.id, data));
     classList.appendChild(classCard);
@@ -132,7 +173,13 @@ document.getElementById("classForm").addEventListener("submit", async (e) => {
   const user = auth.currentUser;
   
   if (!user) {
-    alert("Debes estar logueado");
+    showErrorAlert("Debes estar logueado");
+    return;
+  }
+  
+  // Validar límite de alumnos
+  if (cantidad > MAX_ALUMNOS) {
+    showErrorAlert(`El número máximo de alumnos permitido es ${MAX_ALUMNOS}`);
     return;
   }
   
@@ -153,7 +200,7 @@ document.getElementById("classForm").addEventListener("submit", async (e) => {
     
     showSection(alumnosFormSection);
   } catch (error) {
-    alert(`Error al crear clase: ${error.message}`);
+    showErrorAlert(`Error al crear clase: ${error.message}`);
   }
 });
 
@@ -163,8 +210,14 @@ document.getElementById("alumnoForm").addEventListener("submit", async (e) => {
   const salonId = e.target.dataset.salonId;
   let contador = parseInt(e.target.dataset.contador);
   const total = parseInt(e.target.dataset.total);
-  const usuario = document.getElementById("usuarioAlumno").value;
-  const clave = document.getElementById("claveAlumno").value;
+  const usuario = document.getElementById("usuarioAlumno").value.trim();
+  const clave = document.getElementById("claveAlumno").value.trim();
+  
+  // Validar campos
+  if (!usuario || !clave) {
+    showErrorAlert("Usuario y contraseña son requeridos");
+    return;
+  }
   
   try {
     await db.collection("salones").doc(salonId).update({
@@ -173,6 +226,7 @@ document.getElementById("alumnoForm").addEventListener("submit", async (e) => {
     
     if (contador >= total) {
       // Todos los alumnos agregados
+      showSuccessAlert("¡Clase creada con éxito!");
       await viewClass(salonId);
     } else {
       // Siguiente alumno
@@ -183,13 +237,14 @@ document.getElementById("alumnoForm").addEventListener("submit", async (e) => {
       document.getElementById("usuarioAlumno").focus();
     }
   } catch (error) {
-    alert(`Error al agregar alumno: ${error.message}`);
+    showErrorAlert(`Error al agregar alumno: ${error.message}`);
   }
 });
 
 // 8. Ver una clase específica
 async function viewClass(classId, classData = null) {
   try {
+    currentClassId = classId;
     let data;
     
     if (classData) {
@@ -211,7 +266,7 @@ async function viewClass(classId, classData = null) {
     
     showSection(classViewSection);
   } catch (error) {
-    alert(`Error al cargar la clase: ${error.message}`);
+    showErrorAlert(`Error al cargar la clase: ${error.message}`);
   }
 }
 
@@ -221,7 +276,24 @@ document.getElementById("backToDashboard").addEventListener("click", () => {
   showSection(dashboardSection);
 });
 
-// 10. Manejo de estado de autenticación
+// 10. Eliminar clase
+document.getElementById("deleteClassBtn").addEventListener("click", async () => {
+  if (!currentClassId) return;
+  
+  const confirm = await showConfirmation("¿Estás seguro de que quieres eliminar esta clase? Esta acción no se puede deshacer.");
+  if (!confirm) return;
+  
+  try {
+    await db.collection("salones").doc(currentClassId).delete();
+    showSuccessAlert("Clase eliminada correctamente");
+    loadUserClasses();
+    showSection(dashboardSection);
+  } catch (error) {
+    showErrorAlert(`Error al eliminar la clase: ${error.message}`);
+  }
+});
+
+// 11. Manejo de estado de autenticación
 auth.onAuthStateChanged(user => {
   if (user) {
     // Usuario logueado
@@ -232,28 +304,34 @@ auth.onAuthStateChanged(user => {
   }
 });
 
-// 11. Cerrar sesión
+// 12. Cerrar sesión desde el dashboard
 document.getElementById("logoutBtn").addEventListener("click", async () => {
   try {
+    const confirm = await showConfirmation("¿Estás seguro de que quieres cerrar sesión?");
+    if (!confirm) return;
+    
     await auth.signOut();
     // Limpiar formularios al cerrar sesión
     document.getElementById("loginForm").reset();
     document.getElementById("registerForm").reset();
     showSection(loginSection);
   } catch (error) {
-    alert(`Error al cerrar sesión: ${error.message}`);
+    showErrorAlert(`Error al cerrar sesión: ${error.message}`);
   }
 });
 
-// Cerrar sesión desde la vista de clase
+// 13. Cerrar sesión desde la vista de clase
 document.getElementById("logoutBtnFromClass").addEventListener("click", async () => {
   try {
+    const confirm = await showConfirmation("¿Estás seguro de que quieres cerrar sesión?");
+    if (!confirm) return;
+    
     await auth.signOut();
     // Limpiar formularios al cerrar sesión
     document.getElementById("loginForm").reset();
     document.getElementById("registerForm").reset();
     showSection(loginSection);
   } catch (error) {
-    alert(`Error al cerrar sesión: ${error.message}`);
+    showErrorAlert(`Error al cerrar sesión: ${error.message}`);
   }
 });
