@@ -1,6 +1,4 @@
-// script.js
-
-// Configuración de Firebase incluida directamente
+// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyA3zknvFkQ5Oids3t5DP5RkGPZVpac2TpI",
   authDomain: "lecturaprimaria-4490c.firebaseapp.com",
@@ -10,48 +8,77 @@ const firebaseConfig = {
   appId: "1:516056173373:web:b33564eab44e4325f41354"
 };
 
-
-// Inicializa Firebase
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// 1. Registro de docentes
+// Mostrar login / registro
+document.getElementById("showRegister").onclick = () => {
+  document.getElementById("loginSection").classList.add("hidden");
+  document.getElementById("registerSection").classList.remove("hidden");
+};
+document.getElementById("showLogin").onclick = () => {
+  document.getElementById("registerSection").classList.add("hidden");
+  document.getElementById("loginSection").classList.remove("hidden");
+};
+
+// Registro
 document.getElementById("registerForm").addEventListener("submit", async (e) => {
   e.preventDefault();
-  const email = document.getElementById("email").value;
-  const password = document.getElementById("password").value;
+  const email = document.getElementById("registerEmail").value;
+  const password = document.getElementById("registerPassword").value;
   try {
     await auth.createUserWithEmailAndPassword(email, password);
-    alert("Cuenta creada con éxito");
-    document.getElementById("registerForm").style.display = "none";
-    document.getElementById("loginForm").style.display = "block";
+    alert("Registro exitoso, ahora puedes iniciar sesión");
+    document.getElementById("registerSection").classList.add("hidden");
+    document.getElementById("loginSection").classList.remove("hidden");
   } catch (error) {
     alert(error.message);
   }
 });
 
-// 2. Login de docentes
+// Login
 document.getElementById("loginForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const email = document.getElementById("loginEmail").value;
   const password = document.getElementById("loginPassword").value;
   try {
     await auth.signInWithEmailAndPassword(email, password);
-    document.getElementById("loginForm").style.display = "none";
-    document.getElementById("dashboard").style.display = "block";
+    document.getElementById("loginSection").classList.add("hidden");
+    cargarDashboard();
   } catch (error) {
     alert(error.message);
   }
 });
 
-// 3. Crear salón
+// Cargar dashboard: verifica si el docente ya tiene clase
+async function cargarDashboard() {
+  document.getElementById("dashboard").classList.remove("hidden");
+  const user = auth.currentUser;
+  const query = await db.collection("salones").where("docenteId", "==", user.uid).get();
+
+  if (!query.empty) {
+    const salon = query.docs[0].data();
+    const salonId = query.docs[0].id;
+    document.getElementById("salonExistente").classList.remove("hidden");
+    document.getElementById("gradoFinal").innerText = salon.grado;
+
+    const lista = document.getElementById("listaAlumnos");
+    lista.innerHTML = "";
+    salon.alumnos.forEach((al, i) => {
+      const li = document.createElement("li");
+      li.innerText = `${i + 1}. Usuario: ${al.usuario} | Clave: ${al.clave}`;
+      lista.appendChild(li);
+    });
+  }
+}
+
+// Crear salón
 document.getElementById("classForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const grado = document.getElementById("grado").value;
   const cantidad = parseInt(document.getElementById("cantidad").value);
   const user = auth.currentUser;
-  if (!user) return alert("Debes estar logueado");
 
   const salonRef = await db.collection("salones").add({
     docenteId: user.uid,
@@ -60,15 +87,16 @@ document.getElementById("classForm").addEventListener("submit", async (e) => {
     alumnos: []
   });
 
-  document.getElementById("classForm").style.display = "none";
-  document.getElementById("alumnosForm").style.display = "block";
+  document.getElementById("dashboard").classList.add("hidden");
+  document.getElementById("alumnosForm").classList.remove("hidden");
+
   document.getElementById("alumnoCantidad").innerText = cantidad;
   document.getElementById("alumnoForm").dataset.salonId = salonRef.id;
   document.getElementById("alumnoForm").dataset.total = cantidad;
   document.getElementById("alumnoForm").dataset.contador = 1;
 });
 
-// 4. Agregar alumnos uno por uno
+// Agregar alumnos
 document.getElementById("alumnoForm").addEventListener("submit", async (e) => {
   e.preventDefault();
   const salonId = e.target.dataset.salonId;
@@ -82,8 +110,9 @@ document.getElementById("alumnoForm").addEventListener("submit", async (e) => {
   });
 
   if (contador >= total) {
-    alert("Salón creado con éxito");
-    mostrarSalon(salonId);
+    alert("Salón y alumnos creados con éxito");
+    document.getElementById("alumnosForm").classList.add("hidden");
+    cargarDashboard(); // vuelve al dashboard para mostrar el salón creado
   } else {
     e.target.dataset.contador = contador + 1;
     document.getElementById("usuarioAlumno").value = "";
@@ -91,20 +120,3 @@ document.getElementById("alumnoForm").addEventListener("submit", async (e) => {
     document.getElementById("alumnoActual").innerText = contador + 1;
   }
 });
-
-// 5. Mostrar salón y lista de alumnos
-async function mostrarSalon(salonId) {
-  document.getElementById("alumnosForm").style.display = "none";
-  const salon = await db.collection("salones").doc(salonId).get();
-  const data = salon.data();
-  document.getElementById("salonFinal").style.display = "block";
-  document.getElementById("gradoFinal").innerText = data.grado;
-
-  const lista = document.getElementById("listaAlumnos");
-  lista.innerHTML = "";
-  data.alumnos.forEach((al, i) => {
-    const li = document.createElement("li");
-    li.innerText = `${i + 1}. Usuario: ${al.usuario} | Clave: ${al.clave}`;
-    lista.appendChild(li);
-  });
-}
