@@ -27,6 +27,7 @@ const classList = document.getElementById("classList");
 
 // Variables de estado
 let currentClassId = null;
+let authListener = null;
 
 // Mostrar/ocultar secciones
 function showSection(section) {
@@ -35,7 +36,6 @@ function showSection(section) {
   });
   section.classList.remove("hidden");
 }
-
 
 // Mostrar alerta de éxito
 function showSuccessAlert(message) {
@@ -134,21 +134,23 @@ async function loadUserClasses() {
   const user = auth.currentUser;
   if (!user) return;
   
-  classList.innerHTML = "";
+  classList.innerHTML = "<div class='text-center py-10'><i class='fas fa-spinner fa-spin text-primary-500 text-2xl mb-2'></i><p class='text-gray-500'>Cargando clases...</p></div>";
   
   const classesSnapshot = await db.collection("salones")
     .where("docenteId", "==", user.uid)
     .get();
   
   if (classesSnapshot.empty) {
-    classList.innerHTML = "<p class='text-gray-500'>No tienes clases creadas aún.</p>";
+    classList.innerHTML = "<p class='text-gray-500 text-center py-10'>No tienes clases creadas aún.</p>";
     return;
   }
+  
+  classList.innerHTML = ""; // Limpiar el loader
   
   classesSnapshot.forEach(doc => {
     const data = doc.data();
     const classCard = document.createElement("div");
-    classCard.className = "bg-gray-50 p-4 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100";
+    classCard.className = "bg-gray-50 p-4 rounded-lg border border-gray-200 cursor-pointer hover:bg-gray-100 card-hover";
     classCard.innerHTML = `
       <h3 class="font-medium text-gray-700">${data.grado}</h3>
       <p class="text-sm text-gray-500">${data.alumnos.length}/${data.cantidad} alumnos</p>
@@ -199,6 +201,9 @@ document.getElementById("classForm").addEventListener("submit", async (e) => {
     document.getElementById("alumnoForm").dataset.total = cantidad;
     document.getElementById("alumnoForm").dataset.contador = 1;
     
+    // Actualizar barra de progreso
+    document.getElementById("progressBar").style.width = "0%";
+    
     showSection(alumnosFormSection);
   } catch (error) {
     showErrorAlert(`Error al crear clase: ${error.message}`);
@@ -224,6 +229,10 @@ document.getElementById("alumnoForm").addEventListener("submit", async (e) => {
     await db.collection("salones").doc(salonId).update({
       alumnos: firebase.firestore.FieldValue.arrayUnion({ usuario, clave })
     });
+    
+    // Actualizar barra de progreso
+    const progress = (contador / total) * 100;
+    document.getElementById("progressBar").style.width = `${progress}%`;
     
     if (contador >= total) {
       // Todos los alumnos agregados
@@ -256,12 +265,22 @@ async function viewClass(classId, classData = null) {
     }
     
     document.getElementById("classGrade").textContent = data.grado;
+    document.getElementById("classStudentsCount").textContent = `${data.alumnos.length} alumnos`;
+    document.getElementById("studentsCountBadge").textContent = data.alumnos.length;
+    
     const listaAlumnos = document.getElementById("listaAlumnos");
     listaAlumnos.innerHTML = "";
     
     data.alumnos.forEach((al, i) => {
       const li = document.createElement("li");
-      li.textContent = `${i + 1}. Usuario: ${al.usuario} | Clave: ${al.clave}`;
+      li.className = "bg-white p-3 rounded-lg border border-gray-100";
+      li.innerHTML = `
+        <div class="flex justify-between items-center">
+          <span class="font-medium">${al.usuario}</span>
+          <span class="text-sm bg-gray-100 px-2 py-1 rounded">${al.clave}</span>
+        </div>
+        <div class="text-xs text-gray-500 mt-1">Alumno ${i + 1}</div>
+      `;
       listaAlumnos.appendChild(li);
     });
     
@@ -295,15 +314,25 @@ document.getElementById("deleteClassBtn").addEventListener("click", async () => 
 });
 
 // 11. Manejo de estado de autenticación
-auth.onAuthStateChanged(user => {
-  if (user) {
-    // Usuario logueado
-    checkUserClasses();
-  } else {
-    // Usuario no logueado
-    showSection(loginSection);
+function setupAuthListener() {
+  // Limpia el listener anterior si existe
+  if (authListener) {
+    authListener();
   }
-});
+  
+  authListener = auth.onAuthStateChanged(user => {
+    if (user) {
+      // Usuario logueado
+      checkUserClasses();
+    } else {
+      // Usuario no logueado
+      showSection(loginSection);
+    }
+  });
+}
+
+// Inicializar el listener de autenticación
+setupAuthListener();
 
 // 12. Cerrar sesión desde el dashboard
 document.getElementById("logoutBtn").addEventListener("click", async () => {
@@ -315,6 +344,7 @@ document.getElementById("logoutBtn").addEventListener("click", async () => {
     // Limpiar formularios al cerrar sesión
     document.getElementById("loginForm").reset();
     document.getElementById("registerForm").reset();
+    classList.innerHTML = "";
     showSection(loginSection);
   } catch (error) {
     showErrorAlert(`Error al cerrar sesión: ${error.message}`);
@@ -331,6 +361,7 @@ document.getElementById("logoutBtnFromClass").addEventListener("click", async ()
     // Limpiar formularios al cerrar sesión
     document.getElementById("loginForm").reset();
     document.getElementById("registerForm").reset();
+    classList.innerHTML = "";
     showSection(loginSection);
   } catch (error) {
     showErrorAlert(`Error al cerrar sesión: ${error.message}`);
