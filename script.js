@@ -30,11 +30,12 @@ let currentClassId = null;
 
 // Mostrar/ocultar secciones
 function showSection(section) {
-  document.querySelectorAll("main > section").forEach(sec => {
+  document.querySelectorAll("main section").forEach(sec => {
     sec.classList.add("hidden");
   });
   section.classList.remove("hidden");
 }
+
 
 // Mostrar alerta de éxito
 function showSuccessAlert(message) {
