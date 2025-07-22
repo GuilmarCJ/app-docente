@@ -227,12 +227,13 @@ document.getElementById("alumnoForm").addEventListener("submit", async (e) => {
   
   try {
     await db.collection("salones").doc(salonId).update({
-    alumnos: firebase.firestore.FieldValue.arrayUnion({ 
+  alumnos: firebase.firestore.FieldValue.arrayUnion({ 
     usuario, 
     clave, 
-    requiereCambioClave: true // 👈 nueva bandera
+    claveCambiada: false // ✅ nombre y valor correctos
   })
 });
+
 
     
     // Actualizar barra de progreso
